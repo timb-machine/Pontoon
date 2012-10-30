@@ -1,0 +1,66 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/metadata.class,v 1.1.1.1 2012-10-30 16:45:51 timb Exp $
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	(c) Tim Brown, 2008
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+	
+	require_once("/usr/share/php/simplepie/simplepie.inc");
+	class MetaData {
+		var $appconfig;
+		var $mysqlhandle;
+		var $nodename;
+		function MetaData($_appconfig, $_mysqlhandle, $_nodename) {
+			$this->appconfig = $_appconfig;
+			$this->mysqlhandle = $_mysqlhandle;
+			$this->nodename = $_nodename;
+		}
+		function Menu() {
+			$textmenu = array();
+			return $textmenu;
+		}
+		function View() {
+			$metaview["rssurl"] = "";
+			$metaview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+			$metaview["memedescription"] = "";
+			$metaview["memetags"] = "";
+			$metaview["contenttext"] = "";
+			$feedcache = new SimplePie();
+			$feedcache->set_feed_url($this->appconfig->metalist);
+			$feedcache->set_cache_duration(600);
+			if ($feedcache->init()) {
+				$feedcache->handle_content_type();
+				$itemcounter = 1;
+				foreach ($feedcache->get_items() as $feeditem) {
+					$metaview["contenttext"] .= (($itemcounter > 1) ? "\n" : "");
+					$metaview["contenttext"] .= (($itemcounter > 1) ? "</p>\n" : "");
+					$metaview["contenttext"] .= (($itemcounter > 1) ? "<p>\n" : "");
+					$metaview["contenttext"] .= "	<a href=\"" . $feeditem->get_feed()->get_permalink() . "\"><img src=\"" . $feeditem->get_feed()->get_favicon() . "\" alt=\"[*]\" /></a> <a href=\"" . $feeditem->get_permalink() . "\">" . $feeditem->get_title() . "</a>";
+					$itemcounter ++;
+				}
+			} else {
+				$metaview["contenttext"] = "No content available.";
+			}
+			return $metaview;
+		}
+		function Update() {
+			// TODO: not implemented yet
+		}
+	}
+?>

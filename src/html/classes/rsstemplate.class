@@ -1,0 +1,57 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/rsstemplate.class,v 1.1.1.1 2012-10-30 16:45:52 timb Exp $
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+	(c) Tim Brown, 2007
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+
+	require_once(dirname(__FILE__) . "/config.class");
+	class RSSTemplate {
+		var $appconfig;
+		var $mysqlhandle;
+		var $contenttext;
+		function RSSTemplate() {
+			$this->appconfig = new Config();
+			$this->mysqlhandle = mysql_pconnect($this->appconfig->mysqlhostname, $this->appconfig->mysqlusername, $this->appconfig->mysqlpassword);
+			mysql_select_db($this->appconfig->mysqldatabase, $this->mysqlhandle);
+			if (version_compare(phpversion(), "5.1.0", ">=")) {
+				date_default_timezone_set($this->appconfig->timezone);
+			}
+			$this->contenttext = "\n";
+		}
+		function RSSHeader() {
+			header("Content-type: application/rss+xml");
+			echo "<?xml version=\"1.0\"?>\n";
+			echo "<rss version=\"2.0\">\n";
+			echo "	<channel>\n";
+			echo "		<link>http://" . $_SERVER["SERVER_NAME"] . "/</link>\n";
+			echo "		<title>" . $this->appconfig->sitename . "/:: " . $this->appconfig->siteslogan . "</title>\n";
+			echo "		<description>" . $this->appconfig->sitedescription . "</description>\n";
+			echo "		<copyright>" . $this->appconfig->sitename . " Web Master, 2006 - &lt;mailto:" . $this->appconfig->sitecontact . "&gt;</copyright>\n";
+		}
+		function RSSBody() {
+			echo $this->contenttext;
+		}
+		
+		function RSSFooter() {
+			echo "	</channel>\n";
+			echo "</rss>\n";
+		}
+	}
+?>

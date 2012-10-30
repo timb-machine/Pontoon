@@ -1,0 +1,131 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/pagetemplate.class,v 1.1.1.1 2012-10-30 16:45:51 timb Exp $
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+	(c) Tim Brown, 2007
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+
+	require_once(dirname(__FILE__) . "/config.class");
+	class PageTemplate {
+		var $appconfig;
+		var $mysqlhandle;
+		var $rssurl;
+		var $memetitle;
+		var $memedescription;
+		var $memetags;
+		var $nodename;
+		var $contentmenu;
+		var $contenttext;
+		function PageTemplate() {
+			$this->appconfig = new Config();
+			$this->mysqlhandle = mysql_pconnect($this->appconfig->mysqlhostname, $this->appconfig->mysqlusername, $this->appconfig->mysqlpassword);
+			mysql_select_db($this->appconfig->mysqldatabase, $this->mysqlhandle);
+			session_start();
+			if (!isset($_SESSION["authorsid"])) {
+				$_SESSION["authorsid"] = -1;
+			}
+			srand(time());
+			$_SESSION["nonce"] = md5(rand());
+			$this->rssurl =  "";
+			$this->memetitle =  "";
+			$this->memedescription =  "";
+			$this->memetags = "";
+			preg_match("/(.*)\.php/", htmlentities($_SERVER["PHP_SELF"]), $backreferencearray);
+			$this->nodename = basename($backreferencearray[1]);
+			$this->contentmenu = array();
+			$this->contenttext = "<p>\n";
+			$this->contenttext .= "	No content available.\n";
+			$this->contenttext .= "</p>\n";
+		}
+		function PageHeader() {
+			echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
+			echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
+			echo "	<head>\n";
+			if ($this->rssurl != "") {
+				echo "		<link rel=\"alternate\" type=\"application/rss+xml\" href=\"" . $this->rssurl . "\"/>\n";
+			}
+			echo "		<script type=\"text/javascript\" src=\"" . $this->appconfig->sitepathname . "js/pontoon.js\"></script>\n";
+			echo "		<link rel=\"stylesheet\" href=\"" . $this->appconfig->sitepathname . $this->appconfig->sitestylesheet . "\" />\n";
+			echo "		<title>" . $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan . "</title>\n";
+			echo "	</head>\n";
+		}
+		function PageBody() {
+			echo "	<body>\n";
+			echo "		<div class=\"bodycontainer\">\n";
+			echo "			<div class=\"bodyheader\">\n";
+			echo "				<h1>" . $this->appconfig->sitename . "/" . $this->nodename . ":: <i>" . $this->appconfig->siteslogan . "</i></h1>\n";
+			echo "			</div>\n";
+			echo "			<div class=\"bodymenu\">\n";
+			$directoryhandle = opendir($this->appconfig->sitedirectoryname);
+			while ($filename = readdir($directoryhandle)) {
+				$filelist[] = $filename;
+			}
+			if (is_array($filelist) && $filelist != array()) {
+				echo "				";
+				sort($filelist);
+				$nodecounter = 0;
+				for ($filecounter = 0; $filecounter < count($filelist); $filecounter++) {
+					if (preg_match("/^(.*)\.php$/", $filelist[$filecounter], $backreferencearray)) {
+						if ($nodecounter > 0) {
+							echo " | ";
+						}
+						echo "<a href=\"" . $filelist[$filecounter] . "\">" . $backreferencearray[1] . "</a>";
+						$nodecounter ++;
+					}
+				}
+				echo "\n";
+			}
+			echo "			</div>\n";
+			echo "			<div class=\"contentcontainer\">\n";
+			if (is_array($this->contentmenu) && ($this->contentmenu != array())) {
+				echo "				<div class=\"contentmenu\">\n";
+				echo "					<p>\n";
+				if ($this->contentmenu[0][0] != "") {
+					echo "						<a href=\"" . htmlentities($_SERVER["PHP_SELF"]) . "?id=" . $this->contentmenu[0][0] . "\">" . $this->contentmenu[0][1] . "</a>";
+				} else {
+					echo "						" . $this->contentmenu[0][1];
+				}
+				for ($loopcounter = 1; $loopcounter < count($this->contentmenu); $loopcounter++) {
+					echo "<br/>\n";
+					if ($this->contentmenu[$loopcounter][0] != "") {
+						echo "						<a href=\"" . htmlentities($_SERVER["PHP_SELF"]) . "?id=" . $this->contentmenu[$loopcounter][0] . "\">" . $this->contentmenu[$loopcounter][1] . "</a>";
+					} else {
+						echo "						" . $this->contentmenu[$loopcounter][1];
+					}
+				}
+				echo "\n";
+				echo "					</p>\n";
+				echo "				</div>\n";
+			}
+			echo "				<div class=\"contenttext\">\n";
+			echo $this->contenttext;
+			echo "				</div>\n";
+			echo "			</div>\n";
+			echo "			<div class=\"bodyfooter\">\n";
+			echo "				&copy; <a href=\"mailto:" . $this->appconfig->sitecontact . "\">" . $this->appconfig->sitename . " Web Master</a>, 2006\n";
+			echo "			</div>\n";
+			echo "			<div class=\"memefooter\">\n";
+			echo "				<a href=\"http://del.icio.us/post?v=4;url=http://" . $this->appconfig->livehostname . htmlentities($_SERVER["PHP_SELF"]) . ($_SERVER["QUERY_STRING"] != "" ? htmlentities("?" . $_SERVER["QUERY_STRING"]) : "") . ($this->memetitle != "" ? ";title=" . htmlentities($this->memetitle) : "") . ($this->memedescription != "" ? ";extended=" . htmlentities($this->memedescription) : "") . ($this->memetags != "" ? ";tags=" . htmlentities($this->memetags) : "")  . ";submit=save;jump=close\"><img src=\"images/del.icio.us.png\" title=\"[del.icio.us.png - Post this page to del.icio.us]\" alt=\"[del.icio.us - Post this page to del.icio.us]\"/></a>\n";
+			echo "			</div>\n";
+			echo "		</div>\n";
+			echo "	</body>\n";
+			echo "</html>\n";
+		}
+	}
+?>

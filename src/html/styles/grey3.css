@@ -1,0 +1,104 @@
+/*
+$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/styles/grey3.css,v 1.1.1.1 2012-10-30 16:45:52 timb Exp $
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+(c) Tim Brown, 2007
+<mailto:timb@nth-dimension.org.uk>
+<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+*/
+
+body {
+	background-color: #75767a;
+	color: #d4d4d4;
+	font-family: sans-serif;
+	font-size: 75%;
+}
+div.bodycontainer {
+}
+div.bodyheader {
+	padding: 6px;
+	background-color: #333333;
+}
+div.bodyheader h1 {
+	color: #929db5;
+	font-size: 24pt;
+}
+div.bodymenu {
+	padding: 6px;
+	background-color: #47526a;
+}
+div.bodymenu a {
+	font-weight: bold;
+}
+div.contentcontainer {
+}
+div.contentmenu {
+	width: 20%;
+	float: right;
+	position: relative;
+	padding: 6px;
+	word-spacing: 2px;
+	text-align: justify;
+}
+div.contenttext {
+	width: 74%;
+	float: left;
+	position: relative;
+	padding: 6px;
+	text-align: justify;
+}
+div.commentsbox {
+	display: none;
+}
+div.bodyfooter {
+	float: right;
+	padding: 6px;
+	position: relative;
+	clear: both;
+}
+div.memefooter {
+	float: right;
+	padding: 6px;
+	position: relative;
+	clear: both;
+}
+ul {
+	list-style-type: circle;
+	padding-left: 12px;
+}
+li {
+	padding-left: 12px;
+}
+a {
+	color: #929db5;
+	text-decoration: none;
+}
+a:hover {
+	color: #b4bfd7;
+	text-decoration: underline;
+}
+img.border {
+	padding: 1px;
+	background-color: #6d6d6d;
+}
+pre {
+	width: 100%;
+	padding-left: 25px;
+	background: #f4f4f4 url("images/grey3/codenums.png") repeat-y;
+	color: #000000;
+	font-size: 15px;
+	overflow: auto;
+}

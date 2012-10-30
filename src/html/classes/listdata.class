@@ -1,0 +1,83 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/listdata.class,v 1.1.1.1 2012-10-30 16:45:51 timb Exp $
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	(c) Tim Brown, 2008
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+	
+	class ListData {
+		var $appconfig;
+		var $mysqlhandle;
+		var $nodename;
+		function ListData($_appconfig, $_mysqlhandle, $_nodename) {
+			$this->appconfig = $_appconfig;
+			$this->mysqlhandle = $_mysqlhandle;
+			$this->nodename = $_nodename;
+		}
+		function Menu() {
+			$listmenu = array();
+			return $listmenu;
+		}
+		function View() {
+			if ($this->nodename == "") {
+				$listview["rssurl"] = "";
+				$listview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+				$listview["memedescription"] = "";
+				$listview["memetags"] = "";
+				$listview["contenttext"] =  "No content available.";
+			} else {
+				$listtable = mysql_query("SELECT DISTINCT(type) FROM list WHERE nodename='" . $this->nodename . "' ORDER BY type", $this->mysqlhandle);
+				if ($listrow = mysql_fetch_array($listtable, MYSQL_ASSOC)) {
+					$typecounter = 1;
+					$listview["rssurl"] = "";
+					$listview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$listview["memedescription"] = "";
+					$listview["memetags"] = "";
+					$listview["contenttext"] = "";
+					do {
+						$listview["contenttext"] .= (($typecounter > 1) ? "	" : "") . $listrow["type"] . "\n";
+						$listview["contenttext"] .= "</p>\n";
+						$list2table = mysql_query("SELECT content FROM list WHERE nodename='" . $this->nodename . "' AND type='" . $listrow["type"] . "' ORDER BY content", $this->mysqlhandle);
+						if ($list2row = mysql_fetch_array($list2table, MYSQL_ASSOC)) {
+							$listview["contenttext"] .= "<ul>\n";
+							do {
+								$listview["contenttext"] .= "	<li>\n";
+								$listview["contenttext"] .= "		" . $list2row["content"] . "\n";
+								$listview["contenttext"] .= "	</li>\n";
+							} while ($list2row = mysql_fetch_array($list2table, MYSQL_ASSOC));
+							$listview["contenttext"] .= "</ul>\n";
+						}
+						$listview["contenttext"] .= "<p>\n";
+						$typecounter ++;
+					} while ($listrow = mysql_fetch_array($listtable, MYSQL_ASSOC));
+				} else {
+					$listview["rssurl"] = "";
+					$listview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$listview["memedescription"] = "";
+					$listview["memetags"] = "";
+					$listview["contenttext"] = "No content available.";
+				}
+			}
+			return $listview;
+		}
+		function Update() {
+			// TODO: not implemented yet
+		}
+	}
+?>

@@ -1,0 +1,284 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/blogdata.class,v 1.1.1.1 2012-10-30 16:45:52 timb Exp $
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	(c) Tim Brown, 2008
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+	
+	require_once(dirname(__FILE__) . "/../libs/strings.lib");
+	class BlogData {
+		var $appconfig;
+		var $mysqlhandle;
+		var $nodename;
+		function BlogData($_appconfig, $_mysqlhandle, $_nodename = "") {
+			$this->appconfig = $_appconfig;
+			$this->mysqlhandle = $_mysqlhandle;
+			$this->nodename = $_nodename;
+		}
+		function Menu($_id = -1) {
+			$blogtable = mysql_query("SELECT COUNT(id) FROM blog", $this->mysqlhandle);
+			$blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC);
+			if (is_numeric($_id) && ($_id > 1) && ($blogrow["COUNT(id)"] >= $_id - 1)) {
+				$blogmenu[] = array($_id - 1, "previous");
+			}
+			if (is_numeric($_id) && ($_id >= 1) && ($blogrow["COUNT(id)"] >= $_id + 1)) {
+				$blogmenu[] = array($_id + 1, "next");
+			}
+			$blogmenu[] = array(-1, "latest");
+			return $blogmenu;
+		}
+		function View($_id = -1) {
+			if (!is_numeric($_id) || ($_id == -1)) {
+				$blogview["rssurl"] = $this->appconfig->sitepathname . "rss/blog.php";
+				$blogview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+				$blogview["memedescription"] = "";
+				$blogview["memetags"] = "";
+				$blogtable = mysql_query("SELECT id,authorsid,date,title,post FROM blog WHERE published=1 ORDER BY date DESC LIMIT 10", $this->mysqlhandle);
+				if ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC)) {
+					$postcounter = 1;
+					$blogview["contenttext"] = "";
+					do {
+						$blogview["contenttext"] .= (($postcounter > 1) ? "\n" : "");
+						$blogview["contenttext"] .= (($postcounter > 1) ? "</p>\n" : "");
+						$blogview["contenttext"] .= (($postcounter > 1) ? "<p>\n" : "");
+						$blogview["contenttext"] .= "	" . $blogrow["date"] . "\n";
+						$blogview["contenttext"] .= "</p>\n";
+						$blogview["contenttext"] .= "<p>\n";
+						$blogview["contenttext"] .= "	<a href=\"" . htmlentities($_SERVER["PHP_SELF"]) . "?id=" . $blogrow["id"]. "\">" . $blogrow["title"] . "</a>\n";
+						$blogview["contenttext"] .= "</p>\n";
+						$authorstable = mysql_query("SELECT name FROM authors WHERE id=" . $blogrow["authorsid"], $this->mysqlhandle);
+						if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+							$blogview["contenttext"] .= "<p>\n";
+							$blogview["contenttext"] .= "	By <a href=\"" . $this->appconfig->sitepathname . "authors.php?id=" . $blogrow["authorsid"] . "\">" . $authorsrow["name"] . "</a>\n";
+							$blogview["contenttext"] .= "</p>\n";
+						} else {
+							$blogview["contenttext"] .= "<p>\n";
+							$blogview["contenttext"] .= "	&copy; unknown\n";
+							$blogview["contenttext"] .= "</p>\n";
+						}
+						$blogview["contenttext"] .= "<p>\n";
+						$blogview["contenttext"] .= "	" . SummariseText(200, $blogrow["post"]) . "[<a href=\"" . htmlentities($_SERVER["PHP_SELF"]) . "?id=" . $blogrow["id"]. "\">more</a>]";
+						$postcounter ++;
+					} while ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC));
+				} else {
+					$blogview["rssurl"] = $this->appconfig->sitepathname . "rss/blog.php";
+					$blogview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$blogview["memedescription"] = "";
+					$blogview["memetags"] = "";
+					$blogview["contenttext"] = "No posts available.";
+				}
+			} else {
+				$blogview["rssurl"] = $this->appconfig->sitepathname . "rss/blog.php";
+				$blogview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+				$blogview["memedescription"] = "";
+				$blogview["memetags"] = "";
+				$blogview["contenttext"] = "";
+				$blogtable = mysql_query("SELECT authorsid,date,title,post,mood,music FROM blog WHERE id=" . $_id . " AND published=1", $this->mysqlhandle);
+				if ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC)) {
+					$blogmemetitle = $blogrow["title"];
+					$blogmemedescription = SummariseText(50, $blogrow["post"]);
+					$blogview["contenttext"] .= "<!--<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:trackback=\"http://madskills.com/public/xml/rss/module/trackback/\">\n";
+					$blogview["contenttext"] .= "	<rdf:Description rdf:about=\"http://" . $_SERVER["SERVER_NAME"] . $this->appconfig->sitepathname . "\" dc:identifier=\"http://" . $_SERVER["SERVER_NAME"] . $this->appconfig->sitepathname . "blog.php\" dc:title=\"" . $blogrow["title"] . "\" trackback:ping=\"http://" . $_SERVER["SERVER_NAME"] . $this->appconfig->sitepathname . "utils/trackback.php?id=" . $_id . "\" />\n";
+					$blogview["contenttext"] .= "</rdf:RDF>-->\n";
+					$blogview["contenttext"] .= "	" . $blogrow["date"] . "\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$blogview["contenttext"] .= "<p>\n";
+					$blogview["contenttext"] .= "	" . $blogrow["title"] . "\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$authorstable = mysql_query("SELECT name FROM authors WHERE id=" . $blogrow["authorsid"], $this->mysqlhandle);
+					if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+						$blogview["contenttext"] .= "<p>\n";
+						$blogview["contenttext"] .= "	By <a href=\"" . $this->appconfig->sitepathname . "authors.php?id=" . $blogrow["authorsid"] . "\">" . $authorsrow["name"] . "</a>\n";
+						$blogview["contenttext"] .= "</p>\n";
+					} else {
+						$blogview["contenttext"] .= "<p>\n";
+						$blogview["contenttext"] .= "	By unknown\n";
+						$blogview["contenttext"] .= "</p>\n";
+					}
+					$blogview["contenttext"] .= "<p>\n";
+					$blogview["contenttext"] .= "	" . $blogrow["post"] . "\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$blogview["contenttext"] .= "<p>\n";
+					$blogview["contenttext"] .= "	Mood: " . $blogrow["mood"] . "\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$blogview["contenttext"] .= "<p>\n";
+					$blogview["contenttext"] .= "	Music: " . $blogrow["music"] . "\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$commentstable = mysql_query("SELECT COUNT(id) FROM comments WHERE blogid=" . $_id . " AND published=1", $this->mysqlhandle);
+					if ($commentsrow = mysql_fetch_array($commentstable, MYSQL_ASSOC)) {
+						if ($commentsrow["COUNT(id)"] > 0) {
+							$blogview["contenttext"] .= "<p>\n";
+							$blogview["contenttext"] .= "	<a href=\"javascript:toggleHidden('comments')\">" . $commentsrow["COUNT(id)"] . " comment(s)</a>\n";
+							$blogview["contenttext"] .= "</p>\n";
+							$blogview["contenttext"] .= "<div id=\"comments\" class=\"commentsbox\">\n";
+							$commentstable = mysql_query("SELECT date,authorsid,title,post FROM comments WHERE blogid=" . $_id . " AND published=1", $this->mysqlhandle);
+							if ($commentsrow = mysql_fetch_array($commentstable, MYSQL_ASSOC)) {
+								do {
+									$blogview["contenttext"] .= "	<p>\n";
+									$blogview["contenttext"] .= "		" . $commentsrow["date"] . "\n";
+									$blogview["contenttext"] .= "	</p>\n";
+									$blogview["contenttext"] .= "	<p>\n";
+									$blogview["contenttext"] .= "		" . $commentsrow["title"] . "\n";
+									$blogview["contenttext"] .= "	</p>\n";
+									$authorstable = mysql_query("SELECT name FROM authors WHERE id=" . $commentsrow["authorsid"], $this->mysqlhandle);
+									if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+										$blogview["contenttext"] .= "	<p>\n";
+										$blogview["contenttext"] .= "		By <a href=\"" . $this->appconfig->sitepathname . "authors.php?id=" . $commentsrow["authorsid"] . "\">" . $authorsrow["name"] . "</a>\n";
+										$blogview["contenttext"] .= "	</p>\n";
+									} else {
+										$blogview["contenttext"] .= "	<p>\n";
+										$blogview["contenttext"] .= "		By unknown\n";
+										$blogview["contenttext"] .= "	</p>\n";
+									}
+									$blogview["contenttext"] .= "	<p>\n";
+									$blogview["contenttext"] .= "		" . $commentsrow["post"] . "\n";
+									$blogview["contenttext"] .= "	</p>\n";
+								} while ($commentsrow = mysql_fetch_array($commentstable, MYSQL_ASSOC));
+							}
+							$blogview["contenttext"] .= "</div>\n";
+						}
+					}
+					$blogview["contenttext"] .= "<p>\n";
+					$blogview["contenttext"] .= "	You are ";
+					if (!isset($_SESSION["authorsid"]) || $_SESSION["authorsid"] == -1) {
+						$blogview["contenttext"] .= "unknown, ";
+					} else {
+						$authorstable = mysql_query("SELECT name FROM authors WHERE id=" . $_SESSION["authorsid"], $this->mysqlhandle);
+						if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+							$blogview["contenttext"] .= "<a href=\"" . $this->appconfig->sitepathname . "authors.php?id=" . $commentsrow["authorsid"] . "\">" . $authorsrow["name"] . "</a>, ";
+						} else {
+							$blogview["contenttext"] .= "unknown, ";
+						}
+					}
+					$blogview["contenttext"] .= "<a href=\"javascript:toggleHidden('comment')\">comment</a>?\n";
+					$blogview["contenttext"] .= "</p>\n";
+					$blogview["contenttext"] .= "<div id=\"comment\" class=\"commentsbox\">\n";
+					$blogview["contenttext"] .= "	<form action=\"" . $this->appconfig->sitepathname . "utils/comment.php?blogid=" . $_id . "\" method=\"post\">\n";
+					$blogview["contenttext"] .= "		<p>\n";
+					$blogview["contenttext"] .= "			<input type=\"hidden\" name=\"nonce\" value=\"" . $_SESSION["nonce"] . "\"/>\n";
+					$blogview["contenttext"] .= "		</p>\n";
+					$blogview["contenttext"] .= "		<p>\n";
+					$blogview["contenttext"] .= "			Title:<br/>\n";
+					$blogview["contenttext"] .= "			<input type=\"text\" name=\"title\" maxlength=\"256\" value=\"\"/>\n";
+					$blogview["contenttext"] .= "		</p>\n";
+					$blogview["contenttext"] .= "		<p>\n";
+					$blogview["contenttext"] .= "			Post:<br/>\n";
+					$blogview["contenttext"] .= "			<textarea name=\"post\" cols=\"62\" rows=\"10\"></textarea>\n";
+					$blogview["contenttext"] .= "		</p>\n";
+					$blogview["contenttext"] .= "		<p>\n";
+					$blogview["contenttext"] .= "			<input type=\"submit\" name=\"submit\" value=\"Submit\"/>\n";
+					$blogview["contenttext"] .= "		</p>\n";
+					$blogview["contenttext"] .= "	</form>\n";
+					$blogview["contenttext"] .= "</div>\n";
+					$blogview["contenttext"] .= "<p>";
+				} else {
+					$blogview["contenttext"] .= "No content available.";
+				}
+			}
+			return $blogview;
+		}
+		function Update() {
+			// TODO: not implemented yet
+		}
+		function Feed() {
+			$blogfeed["contenttext"] = "";
+			$blogtable = mysql_query("SELECT id,authorsid,date,title,post FROM blog WHERE published=1 ORDER BY date DESC LIMIT 10", $this->mysqlhandle);
+			if ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC)) {
+				do {
+					$blogfeed["contenttext"] .= "<item>\n";
+					$authorstable = mysql_query("SELECT emailaddress FROM authors where id=" . $blogrow["authorsid"], $this->mysqlhandle);
+					if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+						$blogfeed["contenttext"] .= "	<author>" . $authorsrow["emailaddress"] . " (" . $authorsrow["name"] . ")</author>\n";
+					}
+					$blogfeed["contenttext"] .= "	<pubDate>" . date("r", strtotime($blogrow["date"])) . "</pubDate>\n";
+					$blogfeed["contenttext"] .= "	<link>http://" . $_SERVER["SERVER_NAME"] . $this->appconfig->sitepathname . "blog.php?id=" . $blogrow["id"]. "</link>\n";
+					$blogfeed["contenttext"] .= "	<guid>http://" . $_SERVER["SERVER_NAME"] . $this->appconfig->sitepathname . "blog.php?id=" . $blogrow["id"]. "</guid>\n";
+					$blogfeed["contenttext"] .= "	<title>" . $blogrow["title"] . "</title>\n";
+					$blogfeed["contenttext"] .= "	<description>" . htmlentities(strip_tags(SummariseText(200, $blogrow["post"]))) . "</description>\n";
+					$blogfeed["contenttext"] .= "</item>\n";
+				} while ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC));
+			}
+			return $blogfeed;
+		}
+		function Comment($_id = -1, $_nonce = "", $_title = "", $_post = "") {
+			if (!is_numeric($_id) || ($_id == -1) || ($_SESSION["nonce"] == "") || ($_nonce == "") || ($_SESSION["nonce"] != $_nonce) || !is_numeric($_SESSION["authorsid"]) || ($_title == "") || (strlen($_title) > 65535 ) || ($_post == "") || (strlen($_post) > 65535)) {
+				header("Location: " . $this->appconfig->sitepathname . "blog.php");
+				exit(0);
+			} else {
+				$blogtable = mysql_query("SELECT id FROM blog WHERE id=" . $_id, $this->mysqlhandle);
+				if ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC)) {
+					if (mysql_query("INSERT INTO comments (published,blogid,date,authorsid,title,post) VALUES (0," . $_id . ",NOW()," . $_SESSION["authorsid"] . ",'" . SanitizeText($_title, $this->mysqlhandle) . "','" . SanitizeText($_post, $this->mysqlhandle) . "')", $this->mysqlhandle)) {
+						header("Location: " . $this->appconfig->sitepathname . "blog.php?id=" . $_id);
+						exit(0);
+					} else {
+						header("Location: " . $this->appconfig->sitepathname . "blog.php?id=" . $_id);
+						exit(0);
+					}
+				} else {
+					header("Location: " . $this->appconfig->sitepathname . "blog.php");
+					exit(0);
+				}
+			}
+		}
+		function Trackback($_id = -1,  $_title = "", $_url = "", $_excerpt = "") {
+			if (!is_numeric($_id) || ($_id == -1) || (strlen("<a href=\"" . SanitizeText($_url, $this->mysqlhandle) . "\">TrackBack: " . SanitizeText($_title, $this->mysqlhandle) . "</a>") > 65535) || ($_url == "") || ( strlen(SanitizeText($_excerpt, $this->mysqlhandle)) > 65535)) {
+				echo "<?xml version=\"1.0\"?>\n";
+				echo "<response>\n";
+				echo "	<error>1</error>\n";
+				echo "	<message>Pontoon failed: fatal error</message>\n";
+				echo "</response>\n";
+				exit(0);
+			} else {
+				$blogtable = mysql_query("SELECT id FROM blog WHERE id=" . $_GET["blogid"], $this->mysqlhandle);
+				if ($blogrow = mysql_fetch_array($blogtable, MYSQL_ASSOC)) {
+					if (!preg_match("/^http/", $_url, $backreferencearray)) {
+						echo "<?xml version=\"1.0\"?>\n";
+						echo "<response>\n";
+						echo "	<error>2</error>\n";
+						echo "	<message>Pontoon failed: fatal error</message>\n";
+						echo "</response>\n";
+						exit(0);
+					} else {
+						if (mysql_query("INSERT INTO comments (published,blogid,date,authorsid,title,post) VALUES (0," . $_blogid . ",NOW(),-1,'<a href=\"" . SanitizeText($_url, $this->mysqlhandle) . "\">TrackBack: " . SanitizeText($_title, $this->mysqlhandle) . "</a>','" . SanitizeText($_excerpt, $this->mysqlhandle) . "')", $this->mysqlhandle)) {
+							echo "<?xml version=\"1.0\"?>\n";
+							echo "<response>\n";
+							echo "	<error>0</error>\n";
+							echo "</response>\n";
+							exit(0);
+						} else {
+							echo "<?xml version=\"1.0\"?>\n";
+							echo "<response>\n";
+							echo "	<error>3</error>\n";
+							echo "	<message>Pontoon failed: fatal error</message>\n";
+							echo "</response>\n";
+							exit(0);
+						}
+					}
+				} else {
+					echo "<?xml version=\"1.0\"?>\n";
+					echo "<response>\n";
+					echo "	<error>4</error>\n";
+					echo "	<message>Pontoon failed: fatal error</message>\n";
+					echo "</response>\n";
+					exit(0);
+				}
+			}
+		}
+	}
+?>

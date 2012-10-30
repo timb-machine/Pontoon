@@ -1,0 +1,11 @@
+To install:
+
+1) Check you have SimplePie RSS reader libraries 
+   installed (libphp-simplepie under GNU/Debian)
+2) Import the database from sql/pontoon.sql into your MySQL database
+3) Customise html/classes/config.class
+4) Copy files from html to your web root
+5) Customise the backend database to your hearts content
+
+The latest version of Pontoon can always be found at
+<http://www.nth-dimension.org.uk/>.

@@ -1,0 +1,96 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/authorsdata.class,v 1.1.1.1 2012-10-30 16:45:52 timb Exp $
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	(c) Tim Brown, 2008
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+	
+	class AuthorsData {
+		var $appconfig;
+		var $mysqlhandle;
+		var $nodename;
+		function AuthorsData($_appconfig, $_mysqlhandle, $_nodename) {
+			$this->appconfig = $_appconfig;
+			$this->mysqlhandle = $_mysqlhandle;
+			$this->nodename = $_nodename;
+		}
+		function Menu() {
+			$authorstable = mysql_query("SELECT id,name,flags FROM authors ORDER BY name", $this->mysqlhandle);
+			if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+				do {
+					$authordisabledflag = strpos($authorsrow["flags"], "D");
+					if ($authordisabledflag === false) {
+						$authorsmenu[] = array($authorsrow["id"], $authorsrow["name"]);
+					} else {
+						$authorsmenu[] = array("", $authorsrow["name"]);
+					}
+				} while ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC));
+			} else {
+				$authorsmenu = array();
+			}
+			return $authorsmenu;
+		}
+		function View($_id = -1) {
+			if (!is_numeric($_id) || ($_id == -1)) {
+				$authorsview["rssurl"] = "";
+				$authorsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+				$authorsview["memedescription"] = "";
+				$authorsview["memetags"] = "";
+				$authorsview["contenttext"] = "Please select an author.";
+			} else {
+				$authorstable = mysql_query("SELECT name,freetext,emailaddress,url,flags FROM authors WHERE id=" . $_id, $this->mysqlhandle);
+				if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+					$authordisabledflag = strpos($authorsrow["flags"], "D");
+					if ($authordisabledflag === false) {
+						$authorsview["rssurl"] = "";
+						$authorsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+						$authorsview["memedescription"] = "";
+						$authorsview["memetags"] = "";
+						$authorsview["contenttext"] = $authorsrow["name"] . "\n";
+						$authorsview["contenttext"] .= "</p>\n";
+						$authorsview["contenttext"] .= "<p>\n";
+						$authorsview["contenttext"] .= "	" . $authorsrow["freetext"] . "\n";
+						$authorsview["contenttext"] .= "</p>\n";
+						$authorsview["contenttext"] .= "<p>\n";
+						$authorsview["contenttext"] .= "	&lt;<a href=\"mailto:" . $authorsrow["emailaddress"] .  "\">mailto:" . $authorsrow["emailaddress"] . "</a>&gt;\n";
+						$authorsview["contenttext"] .= "</p>\n";
+						$authorsview["contenttext"] .= "<p>\n";
+						$authorsview["contenttext"] .= "	&lt;<a href=\"" . $authorsrow["url"] .  "\">" . $authorsrow["url"] . "</a>&gt;";
+					} else {
+						$authorsview["rssurl"] = "";
+						$authorsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+						$authorsview["memedescription"] = "";
+						$authorsview["memetags"] = "";
+						$authorsview["contenttext"] = "Please select an author.";
+					}
+				} else {
+					$authorsview["rssurl"] = "";
+					$authorsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$authorsview["memedescription"] = "";
+					$authorsview["memetags"] = "";
+					$authorsview["contenttext"] = "Please select an author.";
+				}
+			}
+			return $authorsview;
+		}
+		function Update() {
+			// TODO: not implemented yet
+		}
+	}
+?>

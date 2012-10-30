@@ -1,0 +1,116 @@
+<?php
+	/*
+	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/classes/downloadsdata.class,v 1.1.1.1 2012-10-30 16:45:51 timb Exp $
+	
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
+	
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+	
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	
+	(c) Tim Brown, 2008
+	<mailto:timb@nth-dimension.org.uk>
+	<http://www.nth-dimension.org.uk/> / <http://www.machine.org.uk/>
+	*/
+	
+	class DownloadsData {
+		var $appconfig;
+		var $mysqlhandle;
+		var $nodename;
+		function DownloadsData($_appconfig, $_mysqlhandle, $_nodename = "") {
+			$this->appconfig = $_appconfig;
+			$this->mysqlhandle = $_mysqlhandle;
+			$this->nodename = $_nodename;
+		}
+		function Menu() {
+			$downloadstable = mysql_query("SELECT DISTINCT(type) FROM downloads ORDER BY type", $this->mysqlhandle);
+			if ($downloadsrow = mysql_fetch_array($downloadstable, MYSQL_ASSOC)) {
+				do {
+					$downloadsmenu[] = array("", $downloadsrow["type"]);
+					$downloads2table = mysql_query("SELECT id,filename FROM downloads WHERE type='" . $downloadsrow["type"] . "' ORDER BY filename", $this->mysqlhandle);
+					while ($downloads2row = mysql_fetch_array($downloads2table, MYSQL_ASSOC)) {
+						$downloadsmenu[] = array($downloads2row["id"], $downloads2row["filename"]);
+					}
+				} while ($downloadsrow = mysql_fetch_array($downloadstable, MYSQL_ASSOC));
+			} else {
+				$downloadsmenu = array();
+			}
+			return $downloadsmenu;
+		}
+		function View($_id = -1) {
+			if (!is_numeric($_id) || ($_id == -1)) {
+				$downloadsview["rssurl"] = "";
+				$downloadsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+				$downloadsview["memedescription"] = "";
+				$downloadsview["memetags"] = "";
+				$downloadsview["contenttext"] = "Please select a download.";
+			} else {
+				$downloadstable = mysql_query("SELECT id,type,filename,version,authorsid,license,description,cvsurl,count FROM downloads WHERE id=" . $_id, $this->mysqlhandle);
+				if ($downloadsrow = mysql_fetch_array($downloadstable, MYSQL_ASSOC)) {
+					$downloadsview["rssurl"] = "";
+					$downloadsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$downloadsview["memedescription"] = "";
+					$downloadsview["memetags"] = "";
+					$downloadsview["contenttext"] = $downloadsrow["filename"] . " " . $downloadsrow["version"] . " (" . $downloadsrow["count"] . " downloads)\n";
+					$downloadsview["contenttext"] .= "</p>\n";
+					$authorstable = mysql_query("SELECT name FROM authors WHERE id=" . $downloadsrow["authorsid"], $this->mysqlhandle);
+					if ($authorsrow = mysql_fetch_array($authorstable, MYSQL_ASSOC)) {
+						$downloadsview["contenttext"] .= "<p>\n";
+						$downloadsview["contenttext"] .= "	&copy; <a href=\"" . $this->appconfig->sitepathname . "authors.php?id=" . $downloadsrow["authorsid"] . "\">" . $authorsrow["name"] . "</a>\n";
+						$downloadsview["contenttext"] .= "</p>\n";
+					} else {
+						$downloadsview["contenttext"] .= "<p>\n";
+						$downloadsview["contenttext"] .= "	&copy; unknown\n";
+						$downloadsview["contenttext"] .= "</p>\n";
+					}
+					$downloadsview["contenttext"] .= "<p>\n";
+					$downloadsview["contenttext"] .= "	License: " . $downloadsrow["license"] . "\n";
+					$downloadsview["contenttext"] .= "</p>\n";
+					$downloadsview["contenttext"] .= "<p>\n";
+					$downloadsview["contenttext"] .= "	" . $downloadsrow["description"] . "\n";
+					$downloadsview["contenttext"] .= "</p>\n";
+					$downloadsview["contenttext"] .= "<p>\n";
+					$downloadsview["contenttext"] .= "	<a href=\"" . $this->appconfig->sitepathname . "utils/get.php?downloadsid=" . $downloadsrow["id"] . "\">Download " . $downloadsrow["filename"] . "</a>";
+					if ($downloadsrow["cvsurl"] != "") {
+						$downloadsview["contenttext"] .= " | <a href=\"" . $downloadsrow["cvsurl"] . "\">Browse CVS</a>";
+					}
+				} else {
+					$downloadsview["rssurl"] = "";
+					$downloadsview["memetitle"] = $this->appconfig->sitename . "/" . $this->nodename . ":: " . $this->appconfig->siteslogan;
+					$downloadsview["memedescription"] = "";
+					$downloadsview["memetags"] = "";
+					$downloadsview["contenttext"] = "Please select a download.";
+				}
+			}
+			return $downloadsview;
+		}
+		function Update() {
+			// TODO: not implemented yet
+		}
+		function Get($_id = -1) {
+			if (!is_numeric($_id) || ($_id == -1)) {
+				header("Location: " . $this->appconfig->sitepathname . "downloads.php");
+				exit(0);
+			} else {				
+				$downloadstable = mysql_query("SELECT id,filename,count FROM downloads WHERE id=" . $_id, $this->mysqlhandle);
+				if ($downloadsrow = mysql_fetch_array($downloadstable, MYSQL_ASSOC)) {
+					$downloadscount = $downloadsrow["count"] + 1;
+					mysql_query("UPDATE downloads SET count=" . $downloadscount . " WHERE id=" . $_id, $this->mysqlhandle);
+					header("Location: " . $this->appconfig->sitepathname . "pub/" . $downloadsrow["filename"]);
+					exit(0);
+				} else {
+					header("Location: " . $this->appconfig->sitepathname . "downloads.php");
+					exit(0);
+				}
+			}
+		}
+	}
+?>

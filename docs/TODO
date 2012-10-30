@@ -1,0 +1,6 @@
+* Make comment functionality accessible
+* Add sidebox for latest blog posts
+* Deprecate use of dirname(__FILE__)
+* Deprecate use of old-school constructors
+* Clean up scoping of methods and variables
+* Clean up input validation
