@@ -26,30 +26,30 @@
 		var $mysqlusername;
 		var $mysqlpassword;
 		var $mysqldatabase;
+		var $livehostname;
 		var $sitedirectoryname;
 		var $sitepathname;
-		var $sitestylesheet;
 		var $timezone;
 		var $sitename;
 		var $siteslogan;
 		var $sitedescription;
 		var $sitecontact;
-		var $livehostname;
+		var $sitestylesheet;
 		var $metalist;
 		function Config() {
 			$this->mysqlhostname = "localhost";
 			$this->mysqlusername = "username";
 			$this->mysqlpassword = "password";
 			$this->mysqldatabase = "database";
+			$this->livehostname = "localhost";
 			$this->sitedirectoryname = "/var/www/" . $_SERVER["SERVER_NAME"];
 			$this->sitepathname = "/";
-			$this->sitestylesheet = "styles/grey3.css";
 			$this->timezone = "Europe/London";
 			$this->sitename = "Pontoon";
 			$this->siteslogan = "A PHP CMS Framework";
 			$this->sitedescription = "Pontoon";
 			$this->sitecontact = $_SERVER["SERVER_ADMIN"];
-			$this->livehostname = "localhost";
+			$this->sitestylesheet = "styles/grey3.css";
 			$this->metalist = array();
 		}
 	}
