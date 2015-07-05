@@ -6,6 +6,7 @@
 * Fixed Content-type header for RSS feed
 * Include authors name in RSS feed
 * Fixed formatting bug
+* Reorganised source tree
 
 1.6 - 1.7
 
