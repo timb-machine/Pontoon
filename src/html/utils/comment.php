@@ -1,6 +1,6 @@
 <?php
 	/*
-	$Header: /var/lib/cvsd/var/lib/cvsd/Pontoon/src/html/utils/comment.php,v 1.2 2012-10-30 17:01:41 timb Exp $
+	$Revision$
 	
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
