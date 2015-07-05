@@ -54,9 +54,11 @@
 			$this->contenttext .= "</p>\n";
 		}
 		function PageHeader() {
+			header("Content-Type: text/html; charset=utf-8");
 			echo "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">\n";
 			echo "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n";
 			echo "	<head>\n";
+			echo "		<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\"/>\n";
 			if ($this->rssurl != "") {
 				echo "		<link rel=\"alternate\" type=\"application/rss+xml\" href=\"" . $this->rssurl . "\"/>\n";
 			}
@@ -122,6 +124,7 @@
 			echo "			</div>\n";
 			echo "			<div class=\"memefooter\">\n";
 			echo "				<a href=\"http://del.icio.us/post?v=4;url=http://" . $this->appconfig->livehostname . htmlentities($_SERVER["PHP_SELF"]) . ($_SERVER["QUERY_STRING"] != "" ? htmlentities("?" . $_SERVER["QUERY_STRING"]) : "") . ($this->memetitle != "" ? ";title=" . htmlentities($this->memetitle) : "") . ($this->memedescription != "" ? ";extended=" . htmlentities($this->memedescription) : "") . ($this->memetags != "" ? ";tags=" . htmlentities($this->memetags) : "")  . ";submit=save;jump=close\"><img src=\"images/del.icio.us.png\" title=\"[del.icio.us.png - Post this page to del.icio.us]\" alt=\"[del.icio.us - Post this page to del.icio.us]\"/></a>\n";
+			echo "				<a href=\"http://twitter.com/home?status=" . htmlentities("Reading http://" . $this->appconfig->livehostname . htmlentities($_SERVER["PHP_SELF"]) . ($_SERVER["QUERY_STRING"] != "" ? htmlentities("?" . $_SERVER["QUERY_STRING"]) : "") . ": " . ($this->memetitle != "" ? htmlentities($this->memetitle) : "")) . "\"><img src=\"images/twitter.png\" title=\"[twitter.png - Post this page to twitter]\" alt=\"[twitter - Post this page to twitter]\"/></a>\n";
 			echo "			</div>\n";
 			echo "		</div>\n";
 			echo "	</body>\n";
