@@ -23,7 +23,7 @@
 
 	function ErrorHandler($_errornumber = E_NOTICE, $_errorstring = "", $_errorfilename = "", $_errorfileline = 0) {
 		error_log("Error #" . $_errornumber . " (" . $_errorstring . ") in " . $_errorfilename . " at " . $_errorfileline);
-		if ($_errornumber != E_NOTICE) {
+		if (($_errornumber != E_NOTICE) && ($_errornumber != E_DEPRECATED)) {
 			die("Pontoon failed: fatal error");
 		}
 	}
