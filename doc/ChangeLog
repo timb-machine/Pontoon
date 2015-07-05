@@ -10,6 +10,7 @@
 * Updated error handling to deal with E_DEPRECATED
 * Cleaned up JavaScript in html/js/pontoon.js
 * Fixed Content-type header for HTML pages
+* Added doc/AUTHORS
 
 1.6 - 1.7
 
