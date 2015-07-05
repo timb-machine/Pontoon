@@ -43,6 +43,7 @@
 			$metaview["contenttext"] = "";
 			$feedcache = new SimplePie();
 			$feedcache->set_feed_url($this->appconfig->metalist);
+			$feedcache->set_cache_location($this->appconfig->sitedirectoryname . "/cache");
 			$feedcache->set_cache_duration(600);
 			if ($feedcache->init()) {
 				$feedcache->handle_content_type();
@@ -51,7 +52,7 @@
 					$metaview["contenttext"] .= (($itemcounter > 1) ? "\n" : "");
 					$metaview["contenttext"] .= (($itemcounter > 1) ? "</p>\n" : "");
 					$metaview["contenttext"] .= (($itemcounter > 1) ? "<p>\n" : "");
-					$metaview["contenttext"] .= "	<a href=\"" . $feeditem->get_feed()->get_permalink() . "\"><img src=\"" . $feeditem->get_feed()->get_favicon() . "\" alt=\"[*]\" /></a> <a href=\"" . $feeditem->get_permalink() . "\">" . $feeditem->get_title() . "</a>";
+					$metaview["contenttext"] .= "	<a href=\"" . $feeditem->get_feed()->get_permalink() . "\"><img src=\"" . $feeditem->get_feed()->get_favicon() . "\" alt=\"[*]\"/></a> <a href=\"" . $feeditem->get_permalink() . "\">" . $feeditem->get_title() . "</a>";
 					$itemcounter ++;
 				}
 			} else {
